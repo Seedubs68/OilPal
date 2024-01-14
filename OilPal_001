@@ -1,0 +1,45 @@
+# Sensors
+sensor:
+# scrape oilpal tank level from modem.  tank_depth is the amount of air between the bottom of the sensor to the oil level.
+# the ip address in the resource: statement is the ip of your oilpal modem.
+# tank_type 1 is cylindar, tank_type 2 is a rectangle 
+  - platform: scrape
+    resource: http://192.168.88.115/diag.htm
+    name: OilPalData
+    select: 'table:nth-of-type(2) td:nth-of-type(5)'
+    unit_of_measurement: 'Litres'
+    value_template: >-
+      {% set modem_values = value.split(' ') %}
+      {% set tank_temp = modem_values[1] %}
+      {% if tank_temp != "Data" %}
+        {% set tank_depth = modem_values[0] | int %}
+        {% set tank_type = {
+          "value": 1
+        } %}
+        {% set tank_dimentions = {
+          "height": 125,
+          "radius": 58.65,
+          "width": 64,
+          "length": 150,
+        } %}
+        {% set tank_area = {
+          "value": (3.1472 * (tank_dimentions.radius * tank_dimentions.radius) * tank_dimentions.height) / 1000,
+        } %}
+        {% if tank_type.value == 1 %}
+          {% set tank_volume = {
+            "value": (tank_dimentions.height - tank_depth) * tank_area.value / 100,
+          } %}
+        {% else %}
+          {% set tank_volume = {
+            "value": (tank_dimentions.height - tank_depth) * tank_dimentions.length * tank_dimentions.width / 1000,
+          } %}
+        {% endif %}
+        {{ tank_volume.value | round (0) }}
+      {% else %}
+        {% if states.sensor.oilpaldata.state == "" %}
+          Waiting for first reading
+        {% else %}
+          {{ states.sensor.oilpaldata.state }}
+        {% endif %}
+      {% endif %}
+    scan_interval: 60
