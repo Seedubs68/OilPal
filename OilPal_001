@@ -4,7 +4,7 @@ sensor:
 # the ip address in the resource: statement is the ip of your oilpal modem.
 # tank_type 1 is cylindar, tank_type 2 is a rectangle 
   - platform: scrape
-    resource: http://192.168.88.115/diag.htm
+    resource: http://192.168.88.103/diag.htm
     name: OilPalData
     select: 'table:nth-of-type(2) td:nth-of-type(5)'
     unit_of_measurement: 'Litres'
